@@ -9,7 +9,6 @@
     <div class="entity-stat"><span>متوقف</span><strong>{{ $stats['inactive'] }}</strong></div>
 </div>
 
-@if(auth()->user()->hasPermission('intermediaries.create'))
 <details id="new-intermediary" class="card master-create-card" @if($errors->any() && old('name')) open @endif>
     <summary class="master-create-summary"><div><strong>+ إضافة وسيط جديد</strong><span>أدخل بيانات التواصل فقط؛ النسبة أو القيمة تحدد في العرض أو العقد.</span></div><span class="btn btn-sm btn-primary">فتح النموذج</span></summary>
     <form method="post" action="{{ route('intermediaries.store') }}" class="master-create-body">@csrf

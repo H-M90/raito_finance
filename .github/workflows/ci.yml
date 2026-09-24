@@ -60,6 +60,9 @@ jobs:
       - name: Run tests
         run: php artisan test
 
+      - name: Check financial data integrity
+        run: php scripts/verify-release-data.php
+
       - name: Run project checks
         run: ./check-project.sh
 

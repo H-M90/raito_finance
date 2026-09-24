@@ -1178,3 +1178,202 @@ protectedForms.forEach(form => {
     form.addEventListener('reset', () => { dirtyForms.delete(form); });
 });
 window.addEventListener('beforeunload', event => { if(dirtyForms.size>0){ event.preventDefault(); event.returnValue=''; } });
+
+// Roles & permissions workspace.
+const permissionsPage = document.querySelector('[data-permissions-page]');
+if (permissionsPage) {
+    const roleSelectors = [...permissionsPage.querySelectorAll('[data-role-selector]')];
+    const rolePanels = [...permissionsPage.querySelectorAll('[data-role-panel]')];
+
+    const normalizePermissionSearch = value => String(value || '')
+        .toLocaleLowerCase('ar')
+        .normalize('NFKD')
+        .replace(/[\u064B-\u065F\u0670]/g, '')
+        .trim();
+
+    const updateRolePanel = panel => {
+        const options = [...panel.querySelectorAll('[data-permission-option]')];
+        options.forEach(option => {
+            const input = option.querySelector('input[type="checkbox"]');
+            option.classList.toggle('is-selected', Boolean(input?.checked));
+        });
+
+        const selected = options.filter(option => option.querySelector('input[type="checkbox"]')?.checked).length;
+        panel.querySelectorAll('[data-role-selected-count], [data-role-selected-count-footer]').forEach(node => {
+            node.textContent = selected;
+        });
+
+        panel.querySelectorAll('[data-permission-group]').forEach(group => {
+            const groupOptions = [...group.querySelectorAll('[data-permission-option]')];
+            const checked = groupOptions.filter(option => option.querySelector('input[type="checkbox"]')?.checked).length;
+            const counter = group.querySelector('[data-group-selected]');
+            if (counter) counter.textContent = checked;
+            const toggle = group.querySelector('[data-group-toggle]');
+            if (toggle) {
+                toggle.checked = groupOptions.length > 0 && checked === groupOptions.length;
+                toggle.indeterminate = checked > 0 && checked < groupOptions.length;
+            }
+        });
+
+        const roleCode = panel.dataset.rolePanel;
+        const roleButton = roleSelectors.find(button => button.dataset.roleSelector === roleCode);
+        const roleState = roleButton?.querySelector('.permissions-role-state:not(.is-admin)');
+        const roleSub = roleButton?.querySelector('.permissions-role-copy small');
+        if (roleState) roleState.textContent = selected;
+        if (roleSub) roleSub.textContent = `${selected} من ${panel.dataset.totalPermissions || options.length} صلاحية`;
+    };
+
+    const filterPanel = panel => {
+        const search = panel.querySelector('[data-permission-search]');
+        const query = normalizePermissionSearch(search?.value);
+        let visibleGroups = 0;
+
+        panel.querySelectorAll('[data-permission-group]').forEach(group => {
+            const groupMatch = query && normalizePermissionSearch(group.dataset.searchText).includes(query);
+            let visibleOptions = 0;
+            group.querySelectorAll('[data-permission-option]').forEach(option => {
+                const visible = !query || groupMatch || normalizePermissionSearch(option.dataset.searchText).includes(query);
+                option.hidden = !visible;
+                if (visible) visibleOptions++;
+            });
+            group.hidden = visibleOptions === 0;
+            if (!group.hidden) visibleGroups++;
+            if (query && !group.hidden) group.open = true;
+        });
+
+        const empty = panel.querySelector('[data-permission-empty]');
+        if (empty) empty.hidden = visibleGroups > 0;
+    };
+
+    const activateRole = code => {
+        let matched = false;
+        roleSelectors.forEach(button => {
+            const active = button.dataset.roleSelector === code;
+            matched ||= active;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-selected', String(active));
+        });
+        rolePanels.forEach(panel => {
+            const active = panel.dataset.rolePanel === code;
+            panel.classList.toggle('active', active);
+            panel.hidden = !active;
+        });
+        if (!matched && roleSelectors[0]) return activateRole(roleSelectors[0].dataset.roleSelector);
+        permissionsPage.dataset.activeRole = code;
+        const url = new URL(window.location.href);
+        url.searchParams.set('role', code);
+        history.replaceState(null, '', url);
+    };
+
+    roleSelectors.forEach(button => button.addEventListener('click', () => activateRole(button.dataset.roleSelector)));
+
+    rolePanels.forEach(panel => {
+        const search = panel.querySelector('[data-permission-search]');
+        search?.addEventListener('input', () => filterPanel(panel));
+
+        panel.addEventListener('change', event => {
+            const input = event.target;
+            if (!(input instanceof HTMLInputElement)) return;
+            if (input.matches('[data-group-toggle]')) {
+                const group = input.closest('[data-permission-group]');
+                group?.querySelectorAll('[data-permission-option] input[type="checkbox"]:not(:disabled)').forEach(checkbox => {
+                    checkbox.checked = input.checked;
+                });
+            }
+            if (input.type === 'checkbox') updateRolePanel(panel);
+        });
+
+        panel.querySelector('[data-select-visible]')?.addEventListener('click', () => {
+            panel.querySelectorAll('[data-permission-option]:not([hidden]) input[type="checkbox"]:not(:disabled)').forEach(input => { input.checked = true; });
+            updateRolePanel(panel);
+        });
+        panel.querySelector('[data-clear-visible]')?.addEventListener('click', () => {
+            panel.querySelectorAll('[data-permission-option]:not([hidden]) input[type="checkbox"]:not(:disabled)').forEach(input => { input.checked = false; });
+            updateRolePanel(panel);
+        });
+
+        updateRolePanel(panel);
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return;
+        const target = event.target;
+        if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return;
+        const activePanel = rolePanels.find(panel => !panel.hidden);
+        const search = activePanel?.querySelector('[data-permission-search]');
+        if (search) {
+            event.preventDefault();
+            search.focus();
+        }
+    });
+
+    activateRole(permissionsPage.dataset.activeRole || roleSelectors[0]?.dataset.roleSelector);
+}
+
+// Users management: explicit create/edit workflow.
+const usersPage = document.querySelector('[data-users-page]');
+if (usersPage) {
+    const createModal = document.querySelector('#user-create-modal');
+    const editModal = document.querySelector('#user-edit-modal');
+    const editForm = document.querySelector('#user-edit-form');
+    const editName = editForm?.querySelector('[data-edit-user-name]');
+    const editEmail = editForm?.querySelector('[data-edit-user-email]');
+    const editRole = editForm?.querySelector('[data-edit-user-role]');
+    const editActive = editForm?.querySelector('[data-edit-user-active]');
+    const editUserId = editForm?.querySelector('[data-edit-user-id]');
+    const editInitial = editForm?.querySelector('[data-edit-user-initial]');
+    const editCaption = editForm?.querySelector('[data-edit-user-caption]');
+
+    const syncSelect = (select, value) => {
+        if (!(select instanceof HTMLSelectElement)) return;
+        select.value = String(value ?? '');
+        if (window.jQuery?.fn?.select2 && window.jQuery(select).hasClass('select2-hidden-accessible')) {
+            window.jQuery(select).trigger('change.select2');
+        }
+    };
+
+    const openEditModal = (button, overrides = {}) => {
+        if (!button || !editModal || !editForm) return;
+        const values = {
+            id: overrides.id ?? button.dataset.userId ?? '',
+            name: overrides.name ?? button.dataset.userName ?? '',
+            email: overrides.email ?? button.dataset.userEmail ?? '',
+            roleId: overrides.roleId ?? button.dataset.userRoleId ?? '',
+            active: overrides.active ?? button.dataset.userActive ?? '0',
+        };
+
+        editForm.action = button.dataset.userUpdateUrl || '';
+        if (editUserId) editUserId.value = values.id;
+        if (editName) editName.value = values.name;
+        if (editEmail) editEmail.value = values.email;
+        syncSelect(editRole, values.roleId);
+        if (editActive) editActive.checked = String(values.active) === '1';
+        if (editInitial) editInitial.textContent = String(values.name || 'م').trim().charAt(0) || 'م';
+        if (editCaption) editCaption.textContent = values.email || 'حدّث البيانات أو الدور أو حالة الحساب.';
+
+        const password = editForm.querySelector('input[name="password"]');
+        if (password) password.value = '';
+        editModal.classList.add('open');
+    };
+
+    usersPage.querySelectorAll('[data-user-edit]').forEach(button => {
+        button.addEventListener('click', () => openEditModal(button));
+    });
+
+    const validationContext = usersPage.dataset.validationContext;
+    if (validationContext === 'create' && createModal) {
+        createModal.classList.add('open');
+    } else if (validationContext === 'edit') {
+        const id = usersPage.dataset.validationUserId || '';
+        const button = [...usersPage.querySelectorAll('[data-user-edit]')].find(item => item.dataset.userId === id);
+        if (button) {
+            openEditModal(button, {
+                id,
+                name: usersPage.dataset.oldName,
+                email: usersPage.dataset.oldEmail,
+                roleId: usersPage.dataset.oldRoleId,
+                active: usersPage.dataset.oldActive,
+            });
+        }
+    }
+}
