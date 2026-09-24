@@ -66,7 +66,7 @@
             <label class="users-search-field">
                 <span>بحث</span>
                 <div class="users-search-box">
-                    <span class="users-search-icon" aria-hidden="true"></span>
+                    <x-ui-icon name="search" class="users-search-icon" />
                     <input name="q" value="{{ request('q') }}" placeholder="الاسم أو البريد الإلكتروني..." autocomplete="off">
                 </div>
             </label>
@@ -152,7 +152,7 @@
                                         data-user-update-url="{{ route('admin.users.update',$user) }}"
                                         aria-label="تعديل المستخدم {{ $user->name }}"
                                     >
-                                        <span class="users-edit-icon" aria-hidden="true"></span>
+                                        <x-ui-icon name="pencil" class="users-edit-icon" />
                                         تعديل
                                     </button>
                                 </td>
@@ -184,10 +184,10 @@
             <input type="hidden" name="_user_form" value="create">
             <div class="modal-head users-modal-head">
                 <div class="users-modal-title">
-                    <span class="users-modal-avatar">+</span>
+                    <span class="users-modal-avatar"><x-ui-icon name="user-round-plus" /></span>
                     <div><span>حساب جديد</span><h3 id="user-create-title">إضافة مستخدم</h3><p>أدخل بيانات الدخول وحدد الدور وحالة الحساب.</p></div>
                 </div>
-                <button class="icon-button" type="button" data-modal-close aria-label="إغلاق">×</button>
+                <button class="icon-button" type="button" data-modal-close aria-label="إغلاق"><x-ui-icon name="x" /></button>
             </div>
             <div class="modal-body users-modal-body">
                 <div class="users-form-grid">
@@ -222,7 +222,7 @@
                     <span class="users-modal-avatar" data-edit-user-initial>م</span>
                     <div><span>بيانات المستخدم</span><h3 id="user-edit-title">تعديل المستخدم</h3><p data-edit-user-caption>حدّث البيانات أو الدور أو حالة الحساب.</p></div>
                 </div>
-                <button class="icon-button" type="button" data-modal-close aria-label="إغلاق">×</button>
+                <button class="icon-button" type="button" data-modal-close aria-label="إغلاق"><x-ui-icon name="x" /></button>
             </div>
             <div class="modal-body users-modal-body">
                 <div class="users-form-grid">

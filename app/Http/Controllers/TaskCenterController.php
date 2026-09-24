@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\CustomerSuccessService;
 use App\Services\SalesLeadService;
 use App\Support\OwnRecordVisibility;
+use App\Support\SalesLeadVisibility;
 use App\Support\TaskCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -67,9 +68,7 @@ class TaskCenterController extends Controller
 
         if ($type === 'lead') {
             $query = SalesLead::query()->whereNull('deleted_at')->whereNotIn('stage',['won','lost','disqualified']);
-            if (OwnRecordVisibility::restricts(auth()->user())) {
-                $query->where(fn($x)=>$x->where('owner_id',auth()->id())->orWhere('created_by',auth()->id()));
-            }
+            SalesLeadVisibility::apply($query);
             if ($q !== '') {
                 $like = "%{$q}%";
                 $query->where(fn($x)=>$x->where('company_name','like',$like)->orWhere('contact_name','like',$like)->orWhere('phone','like',$like)->orWhere('code','like',$like));
@@ -237,7 +236,9 @@ class TaskCenterController extends Controller
             ->leftJoin('users as u','u.id','=','t.assigned_to')
             ->whereNull('l.deleted_at')
             ->selectRaw("'sales' source, t.id task_id, 'lead' target_type, l.id target_id, l.company_name target_name, l.contact_name target_contact, {$salesTeam} team, t.type raw_type, CASE WHEN t.type IN ('call','message','whatsapp','email') THEN 'follow_up' ELSE t.type END normalized_type, t.title, {$salesDescription} description, t.priority, t.due_at, t.status, t.assigned_to, u.name assignee_name, t.completed_at, t.created_at, t.is_follow_up protected_task");
-        if (OwnRecordVisibility::restricts(auth()->user())) {
+        if (SalesLeadVisibility::restrictsToAssigned()) {
+            $sales->where('l.owner_id', auth()->id());
+        } elseif (OwnRecordVisibility::restricts(auth()->user())) {
             $sales->where(fn($q)=>$q->where('t.assigned_to',auth()->id())->orWhere('l.owner_id',auth()->id())->orWhere('l.created_by',auth()->id()));
         }
 
@@ -335,11 +336,7 @@ class TaskCenterController extends Controller
 
     private function findVisibleLead(int $id): SalesLead
     {
-        $query = SalesLead::query();
-        if (OwnRecordVisibility::restricts(auth()->user())) {
-            $query->where(fn($q)=>$q->where('owner_id',auth()->id())->orWhere('created_by',auth()->id()));
-        }
-        return $query->findOrFail($id);
+        return SalesLeadVisibility::apply(SalesLead::query())->findOrFail($id);
     }
 
     private function findVisibleCustomer(int $id): Customer
@@ -351,6 +348,11 @@ class TaskCenterController extends Controller
 
     private function authorizeSalesTask(SalesLeadTask $task): void
     {
+        $task->loadMissing('lead');
+        if (SalesLeadVisibility::restrictsToAssigned()) {
+            abort_unless((int)$task->lead?->owner_id === (int)auth()->id(), 403);
+            return;
+        }
         if (! OwnRecordVisibility::restricts(auth()->user())) return;
         abort_unless((int)$task->assigned_to===(int)auth()->id() || (int)$task->lead?->owner_id===(int)auth()->id() || (int)$task->lead?->created_by===(int)auth()->id(),403);
     }

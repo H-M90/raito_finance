@@ -8,7 +8,7 @@ use App\Models\SalesLeadTask;
 use App\Models\User;
 use App\Services\NumberGenerator;
 use App\Services\SalesLeadService;
-use App\Support\OwnRecordVisibility;
+use App\Support\SalesLeadVisibility;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +20,6 @@ class SalesLeadController extends Controller
 {
     public function index(Request $request): View
     {
-        $viewer = auth()->user();
         $base = $this->visibleQuery();
         $stageCounts = (clone $base)->selectRaw('stage, COUNT(*) total')->groupBy('stage')->pluck('total','stage');
         $metrics = [
@@ -44,7 +43,9 @@ class SalesLeadController extends Controller
         $perPage = in_array((int)$request->per_page,[20,50,100],true) ? (int)$request->per_page : 20;
         $leads = $query->orderBy($sort,$direction)->paginate($perPage)->withQueryString();
 
-        $owners = User::where('is_active',true)->orderBy('name')->get(['id','name']);
+        $owners = SalesLeadVisibility::restrictsToAssigned()
+            ? User::whereKey(auth()->id())->get(['id','name'])
+            : User::where('is_active',true)->orderBy('name')->get(['id','name']);
         $quickCounts = $this->quickCounts();
         return view('sales-leads.index', compact('leads','owners','metrics','quickCounts','stageCounts'));
     }
@@ -62,7 +63,7 @@ class SalesLeadController extends Controller
 
     public function create(): View
     {
-        $owners=User::where('is_active',true)->orderBy('name')->get(['id','name']);
+        $owners=$this->assignableOwners();
         return view('sales-leads.form',['lead'=>new SalesLead,'owners'=>$owners]);
     }
 
@@ -98,6 +99,9 @@ class SalesLeadController extends Controller
             $service->syncFollowUp($lead);
             return $lead;
         });
+        if (! SalesLeadVisibility::allows($lead)) {
+            return redirect()->route('sales-leads.index')->with('success','تم إنشاء العميل المحتمل وإسناده للمسؤول المحدد.');
+        }
         return redirect()->route('sales-leads.show',$lead)->with('success','تم إنشاء العميل المحتمل وإضافة المتابعة القادمة.');
     }
 
@@ -110,14 +114,14 @@ class SalesLeadController extends Controller
             'notes'=>fn($q)=>$q->with('creator')->latest()->limit(30),
             'tasks'=>fn($q)=>$q->with(['assignee','completedBy'])->orderByRaw("CASE status WHEN 'open' THEN 1 ELSE 2 END")->orderBy('due_at')->limit(40),
         ]);
-        $owners=User::where('is_active',true)->orderBy('name')->get(['id','name']);
+        $owners=$this->assignableOwners();
         return view('sales-leads.show',['lead'=>$salesLead,'owners'=>$owners]);
     }
 
     public function edit(SalesLead $salesLead): View
     {
         $this->authorizeLead($salesLead);
-        $owners=User::where('is_active',true)->orderBy('name')->get(['id','name']);
+        $owners=$this->assignableOwners();
         return view('sales-leads.form',['lead'=>$salesLead,'owners'=>$owners]);
     }
 
@@ -165,6 +169,9 @@ class SalesLeadController extends Controller
         if (array_key_exists('next_follow_up_at',$data) || array_key_exists('next_follow_up_type',$data) || array_key_exists('next_follow_up_title',$data)) {
             $service->syncFollowUp($salesLead);
             $service->log($salesLead,'تحديث المتابعة القادمة','تم تحديث موعد أو نوع المتابعة القادمة.');
+        }
+        if (! SalesLeadVisibility::allows($salesLead)) {
+            return redirect()->route('sales-leads.index')->with('success','تم تحديث العميل المحتمل وإسناده للمسؤول المحدد.');
         }
         return back()->with('success','تم تحديث رحلة العميل المحتمل.');
     }
@@ -267,16 +274,21 @@ class SalesLeadController extends Controller
 
     private function visibleQuery()
     {
-        $query=SalesLead::query();
-        if (OwnRecordVisibility::restricts(auth()->user())) {
-            $query->where(function($q){$q->where('owner_id',auth()->id())->orWhere('created_by',auth()->id());});
-        }
-        return $query;
+        return SalesLeadVisibility::apply(SalesLead::query());
     }
 
     private function authorizeLead(SalesLead $lead): void
     {
-        if (OwnRecordVisibility::restricts(auth()->user()) && (int)$lead->owner_id !== (int)auth()->id() && (int)$lead->created_by !== (int)auth()->id()) abort(403);
+        abort_unless(SalesLeadVisibility::allows($lead), 403);
+    }
+
+    private function assignableOwners()
+    {
+        if (! auth()->user()->hasPermission('sales-leads.assign')) {
+            return User::whereKey(auth()->id())->get(['id','name']);
+        }
+
+        return User::where('is_active',true)->orderBy('name')->get(['id','name']);
     }
 
     private function validateLead(Request $request, bool $creating): array

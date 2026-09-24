@@ -21,7 +21,7 @@
             <td><strong>{{ str_replace(\App\Services\CustomerSuccessService::AUTO_FOLLOW_UP_PREFIX,'',$task->title) }}</strong>@if($task->description)<div class="muted">{{ \Illuminate\Support\Str::limit($task->description,90) }}</div>@endif</td>
             <td>{{ $task->assignee?->name ?: 'غير محدد' }}</td>
             <td class="{{ $task->due_at && $task->due_at->isPast()?'text-danger':'' }}"><strong>{{ $task->due_at?->format('Y-m-d H:i') ?: 'بدون موعد' }}</strong>@if($task->due_at && $task->due_at->isPast())<div class="muted">متأخرة</div>@endif</td>
-            <td><a class="icon-action" href="{{ route('customers.show',$task->customer) }}#customer-success" title="فتح ملف العميل" aria-label="فتح ملف العميل"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg></a></td>
+            <td><a class="icon-action" href="{{ route('customers.show',$task->customer) }}#customer-success" title="فتح ملف العميل" aria-label="فتح ملف العميل"><x-ui-icon name="user-round" /></a></td>
         </tr>
     @empty<tr><td colspan="5" class="empty-state">لا توجد متابعات مفتوحة الآن.</td></tr>@endforelse
     </tbody></table></div>
@@ -44,7 +44,7 @@
             <td><span class="badge {{ in_array($profile->attention_level,['critical','high'],true)?'badge-warning':'badge-info' }}">{{ $profile->lifecycleStatus?->name ?: '—' }}</span></td>
             <td><strong>{{ $primaryFlag?->type?->name ?: 'لا يوجد تنبيه حالي' }}</strong>@if($primaryFlag?->notes)<div class="muted">{{ \Illuminate\Support\Str::limit($primaryFlag->notes,80) }}</div>@endif</td>
             <td class="{{ $profile->next_review_at && $profile->next_review_at->isPast()?'text-danger':'' }}">{{ $profile->next_review_at?->format('Y-m-d H:i') ?: '—' }}</td>
-            <td><a class="icon-action" href="{{ route('customers.show',$profile->customer) }}#customer-success" title="فتح ملف العميل" aria-label="فتح ملف العميل"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg></a></td>
+            <td><a class="icon-action" href="{{ route('customers.show',$profile->customer) }}#customer-success" title="فتح ملف العميل" aria-label="فتح ملف العميل"><x-ui-icon name="user-round" /></a></td>
         </tr>
     @empty<tr><td colspan="5" class="empty-state">لا توجد حالات مطابقة.</td></tr>@endforelse
     </tbody></table></div>

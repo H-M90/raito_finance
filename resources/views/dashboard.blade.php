@@ -69,7 +69,7 @@
                 <td><span class="badge {{ $task->priority==='critical'?'badge-danger':'badge-warning' }}">{{ str_replace(\App\Services\CustomerSuccessService::AUTO_FOLLOW_UP_PREFIX,'',$task->title) }}</span> <span class="badge badge-info">{{ $cadence }}</span>@if($task->description)<div class="muted">{{ \Illuminate\Support\Str::limit($task->description,110) }}</div>@endif</td>
                 <td>{{ $task->customer->successProfile?->lifecycleStatus?->name ?: 'غير محدد' }}</td>
                 <td class="{{ $task->due_at && $task->due_at->isPast()?'text-danger':'' }}"><strong>{{ $task->due_at?->format('Y-m-d H:i') }}</strong>@if($task->due_at && $task->due_at->isPast())<div class="muted">متأخرة</div>@endif</td>
-                <td><a class="icon-action" href="{{ route('customers.show',$task->customer) }}#customer-success" title="فتح ملف العميل" aria-label="فتح ملف العميل"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg></a></td>
+                <td><a class="icon-action" href="{{ route('customers.show',$task->customer) }}#customer-success" title="فتح ملف العميل" aria-label="فتح ملف العميل"><x-ui-icon name="user-round" /></a></td>
             </tr>
         @endforeach
         </tbody></table></div>

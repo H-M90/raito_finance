@@ -20,6 +20,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
         $user = $request->user();
+        $request->session()->put('auth_session_version', (int) $user?->auth_session_version);
         $user?->loadMissing('role');
 
         if (! $user?->role) {

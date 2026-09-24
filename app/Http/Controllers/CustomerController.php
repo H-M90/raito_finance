@@ -24,6 +24,9 @@ class CustomerController extends Controller
     {
         $viewer = auth()->user();
         $successStatuses = collect();
+        $segments = Customer::query()->whereNotNull('segment')->distinct()->orderBy('segment')->pluck('segment');
+        $cities = Customer::query()->whereNotNull('city')->where('city', '<>', '')->distinct()->orderBy('city')->pluck('city');
+        $salesOwners = User::query()->whereIn('id', Customer::query()->whereNotNull('sales_owner_id')->select('sales_owner_id'))->orderBy('name')->get(['id','name']);
         $query = Customer::query()->withCount(['contracts','stations']);
         if ($viewer->hasPermission('customer-success.view')) {
             $query->with([
@@ -38,8 +41,13 @@ class CustomerController extends Controller
         $customers = $query->search($request->string('q')->toString())
             ->when($request->filled('status'), fn ($q) => $q->where('status',$request->status))
             ->when($request->filled('segment'), fn ($q) => $q->where('segment',$request->segment))
+            ->when($request->filled('city'), fn ($q) => $q->where('city',$request->city))
+            ->when($request->filled('sales_owner_id'), fn ($q) => $q->where('sales_owner_id',$request->sales_owner_id))
+            ->when($request->contracts === 'yes', fn ($q) => $q->has('contracts'))
+            ->when($request->contracts === 'no', fn ($q) => $q->doesntHave('contracts'))
+            ->when($viewer->hasPermission('customer-success.view') && $request->filled('success_status'), fn ($q) => $q->whereHas('successProfile.lifecycleStatus', fn ($s) => $s->where('code',$request->success_status)))
             ->latest()->paginate(config('finance.pagination'))->withQueryString();
-        return view('customers.index', compact('customers','successStatuses'));
+        return view('customers.index', compact('customers','successStatuses','segments','cities','salesOwners'));
     }
 
     public function create(): View { return view('customers.form', ['customer'=>new Customer,'salesOwners'=>User::where('is_active',true)->orderBy('name')->get(['id','name'])]); }

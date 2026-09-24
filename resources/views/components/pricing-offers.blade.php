@@ -9,7 +9,7 @@
                    data-segment="{{ $offer->customer_segment }}" data-discount="{{ $offer->discount_percentage }}" data-fixed-discount="{{ $offer->fixed_discount_amount }}"
                    data-min-users="{{ $offer->minimum_users }}" data-free-users="{{ $offer->free_users }}" data-repeat="{{ $offer->repeat_for_each_threshold?1:0 }}"
                    data-products="{{ $productIds }}" data-stackable="{{ $offer->is_stackable?1:0 }}" data-priority="{{ $offer->priority }}">
-            <span class="offer-check">✓</span>
+            <span class="offer-check"><x-ui-icon name="check" /></span>
             <span><strong>{{ $offer->name }}</strong><small>
                 @if($offer->type==='free_users') {{ $offer->repeat_for_each_threshold?'كل':'عند طلب' }} {{ $offer->minimum_users }} مستخدم: {{ $offer->free_users }} مجاني
                 @elseif($offer->type==='bundle_fixed_discount') خصم ثابت {{ number_format((float)$offer->fixed_discount_amount,2) }} عند وجود {{ $offer->products->pluck('name')->join(' + ') }}

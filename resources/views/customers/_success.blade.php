@@ -84,26 +84,8 @@ $customerHistory = $statusHistoryItems->concat($followUpHistoryItems)
         </div>
         <div class="cs-header-actions">
             @if(auth()->user()->hasPermission('customer-success.update'))
-                <details class="cs-reassess-menu">
-                    <summary class="btn btn-outline">إعادة تقييم العميل</summary>
-                    <form method="post" action="{{ route('customer-success.transition',$customer) }}" class="cs-reassess-popover">
-                        @csrf
-                        <strong>تغيير حالة العميل</strong>
-                        <div class="form-group">
-                            <label>الحالة الجديدة</label>
-                            <select class="select" name="status_code" required>
-                                @foreach($successData['statuses'] as $status)
-                                    <option value="{{ $status->code }}" @selected($profile?->lifecycleStatus?->code===$status->code)>{{ $status->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>سبب التغيير</label>
-                            <input class="input" name="reason" maxlength="500" placeholder="مثال: العميل عاد للاستخدام الطبيعي">
-                        </div>
-                        <button class="btn btn-primary" type="submit">حفظ التقييم</button>
-                    </form>
-                </details>
+                <button class="btn btn-outline" type="button" data-reassess-open="reassess-customer-{{ $customer->id }}">إعادة تقييم العميل</button>
+                @include('customers._reassess_dialog', ['dialogId' => 'reassess-customer-'.$customer->id, 'statuses' => $successData['statuses']])
             @endif
             @if(auth()->user()->hasPermission('customer-success.dashboard'))
                 <a class="btn btn-light" href="{{ route('customer-success.dashboard') }}">قائمة المتابعة اليوم</a>

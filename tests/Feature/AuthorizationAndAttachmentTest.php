@@ -40,6 +40,22 @@ class AuthorizationAndAttachmentTest extends TestCase
         $this->assertStringContainsString("default-src 'self'", (string) $response->headers->get('Content-Security-Policy'));
     }
 
+    public function test_customer_filters_use_actual_city_owner_and_contract_presence(): void
+    {
+        $owner = $this->userWithPermissions(['customers.view']);
+        $otherOwner = $this->userWithPermissions(['customers.view'], 'other-owner@example.test');
+        $matching = Customer::create(['code'=>'CUS-FILTER-1','name'=>'عميل القاهرة','city'=>'القاهرة','segment'=>'imported-sector','status'=>'active','sales_owner_id'=>$owner->id]);
+        Customer::create(['code'=>'CUS-FILTER-2','name'=>'عميل الإسكندرية','city'=>'الإسكندرية','segment'=>'standard','status'=>'active','sales_owner_id'=>$otherOwner->id]);
+
+        $response = $this->actingAs($owner)->get(route('customers.index', [
+            'city'=>'القاهرة', 'sales_owner_id'=>$owner->id, 'contracts'=>'no', 'segment'=>'imported-sector',
+        ]));
+
+        $response->assertOk()->assertSee($matching->name)->assertDontSee('عميل الإسكندرية');
+        $response->assertSee('imported-sector');
+        $response->assertDontSee('data-reassess-open', false);
+    }
+
     public function test_attachment_requires_both_attachment_and_parent_document_permissions(): void
     {
         Storage::fake('local');

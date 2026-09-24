@@ -44,6 +44,17 @@ mobileNavigation.addEventListener('change', () => setSidebarOpen(false, false));
 setSidebarOpen(false, false);
 document.querySelectorAll('.nav-link.active').forEach(link => link.setAttribute('aria-current', 'page'));
 
+document.querySelectorAll('[data-reassess-open]').forEach(button => {
+    const dialog = document.getElementById(button.dataset.reassessOpen);
+    if (!dialog) return;
+    button.addEventListener('click', () => dialog.showModal());
+    dialog.addEventListener('close', () => button.focus());
+    dialog.querySelectorAll('[data-reassess-close]').forEach(close => close.addEventListener('click', () => dialog.close()));
+    dialog.addEventListener('click', event => {
+        if (event.target === dialog) dialog.close();
+    });
+});
+
 // Connect existing visible labels without changing form names or submitted values.
 document.querySelectorAll('.form-group').forEach((group, index) => {
     const label = group.querySelector(':scope > label');

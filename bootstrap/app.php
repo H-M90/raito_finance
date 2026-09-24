@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureOwnRecordVisibility;
+use App\Http\Middleware\EnsureActiveSession;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: []);
         $middleware->appendToGroup('web', SecurityHeaders::class);
         $middleware->alias([
+            'active-session' => EnsureActiveSession::class,
             'permission' => EnsurePermission::class,
             'own-records' => EnsureOwnRecordVisibility::class,
         ]);

@@ -38,7 +38,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.store');
 });
-Route::middleware(['auth', 'own-records'])->group(function () {
+Route::middleware(['auth', 'active-session', 'own-records'])->group(function () {
     Route::get('/', DashboardController::class)->middleware('permission:dashboard.view')->name('dashboard');
     Route::prefix('lookup')->name('lookup.')->group(function () {
         Route::get('customers', [LookupController::class, 'customers'])->middleware('permission:customers.view')->name('customers');

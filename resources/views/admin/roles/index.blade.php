@@ -88,7 +88,7 @@
                     </header>
 
                     @if($isAdmin)
-                        <div class="permissions-admin-note"><span class="permissions-admin-mark">✓</span><div><strong>صلاحيات كاملة</strong><p>دور مدير النظام يصل تلقائيًا إلى جميع الشاشات والعمليات، لذلك لا يمكن تعديل اختياراته.</p></div></div>
+                        <div class="permissions-admin-note"><span class="permissions-admin-mark"><x-ui-icon name="check" /></span><div><strong>صلاحيات كاملة</strong><p>دور مدير النظام يصل تلقائيًا إلى جميع الشاشات والعمليات، لذلك لا يمكن تعديل اختياراته.</p></div></div>
                     @endif
 
                     <div class="permissions-controls">

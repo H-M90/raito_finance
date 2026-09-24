@@ -120,7 +120,7 @@
                     <td>@if($lead->last_activity_at)<span class="sales-last-activity {{ $days!==null&&$days>7?'stale':($days!==null&&$days>3?'warm':'fresh') }}">{{ $days===0?'اليوم':($days===1?'أمس':$days.' أيام') }}</span>@else<span class="sales-last-activity stale">لا يوجد</span>@endif</td>
                     <td class="{{ $overdue?'text-danger':'' }}">@if($lead->next_follow_up_at)<strong>{{ $lead->next_follow_up_at->format('Y-m-d') }}</strong><small class="muted">{{ $lead->next_follow_up_at->format('H:i') }} · {{ \App\Models\SalesLead::TASK_TYPES[$lead->next_follow_up_type]??'متابعة' }}</small>@else<span class="muted">بدون متابعة</span>@endif</td>
                     <td>{{ $lead->owner?->name ?: 'غير معين' }}</td>
-                    <td><a class="sales-profile-icon" href="{{ route('sales-leads.show',$lead) }}" title="فتح ملف العميل المحتمل" aria-label="فتح ملف العميل المحتمل"><span></span></a></td>
+                    <td><a class="sales-profile-icon" href="{{ route('sales-leads.show',$lead) }}" title="فتح ملف العميل المحتمل" aria-label="فتح ملف العميل المحتمل"><x-ui-icon name="user-round" /></a></td>
                 </tr>
             @empty<tr><td colspan="12" class="empty-state">لا توجد عملاء محتملون مطابقة للفلاتر الحالية.</td></tr>@endforelse
             </tbody>

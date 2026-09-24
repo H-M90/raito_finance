@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -77,6 +78,10 @@ class UserController extends Controller
         }
 
         $data['is_active'] = $request->boolean('is_active');
+        if ($user->is_active && ! $data['is_active']) {
+            $user->auth_session_version = (int) $user->auth_session_version + 1;
+            $user->setRememberToken(Str::random(60));
+        }
         $user->update($data);
 
         return back()->with('success', 'تم تحديث بيانات المستخدم بنجاح.');

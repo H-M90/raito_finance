@@ -470,6 +470,27 @@ html:has(.raito-ui){font-size:16px}
 .raito-ui .customer-followup-reason{font-size:11px;color:var(--muted)}
 .raito-ui .customer-followup-reason strong{font-size:12px}
 .raito-ui .customer-row-actions{gap:6px}
+.raito-ui .customer-row-actions .icon-action{width:38px;height:38px;padding:0;cursor:pointer}
+.raito-ui .customer-row-actions .icon-action .ui-icon{width:19px;height:19px}
+.customer-reassess-dialog{width:min(430px,calc(100vw - 28px));max-height:calc(100vh - 40px);padding:20px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--text);box-shadow:0 22px 60px #102f4140;overflow:auto}
+.customer-reassess-dialog::backdrop{background:#071e2680}
+.customer-reassess-dialog form{display:grid;gap:14px}
+.customer-reassess-head,.customer-reassess-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.customer-reassess-head strong{font-size:1rem}
+.customer-reassess-head .icon-action{flex:none;width:34px;height:34px;padding:0;cursor:pointer}
+.customer-reassess-actions{justify-content:flex-end;padding-top:4px}
+.raito-ui .task-focus-icon{display:grid;place-items:center}
+.raito-ui .task-focus-icon::before,.raito-ui .task-focus-icon::after{content:none}
+.raito-ui .task-focus-icon .ui-icon{width:21px;height:21px}
+.raito-ui .task-focus-icon.is-today{color:var(--task-teal)}
+.raito-ui .task-focus-icon.is-overdue{color:var(--task-danger)}
+.raito-ui .task-focus-icon.is-meeting{color:var(--task-purple)}
+.raito-ui .task-focus-icon.is-done{color:var(--task-green)}
+.raito-ui .sales-profile-icon .ui-icon{width:17px;height:17px;color:#0b7f8e}
+.raito-ui .users-search-box .users-search-icon{width:17px;height:17px;flex:none;border:0;border-radius:0;color:#8da0a8}
+.raito-ui .users-search-box .users-search-icon::after{content:none}
+.raito-ui .users-edit-button .users-edit-icon{width:14px;height:14px;border:0;border-radius:0;transform:none}
+.raito-ui .users-edit-button .users-edit-icon::after{content:none}
 .raito-ui .enterprise-form{max-width:1440px;margin-inline:auto}
 .raito-ui .customer-profile-page{gap:20px;max-width:1500px}
 .raito-ui .cpf-hero{background:var(--navy);border:1px solid #284754;border-radius:14px;box-shadow:none}

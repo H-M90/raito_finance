@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "jquery": "3.7.1",
+    "lucide-static": "1.48.0",
     "select2": "4.0.13",
     "select2-bootstrap-5-theme": "1.3.0"
   }

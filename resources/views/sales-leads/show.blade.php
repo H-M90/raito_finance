@@ -82,7 +82,7 @@
 
             <section class="card"><div class="card-header"><div><h2>الخصائص المهتم بها</h2><p>ما الذي يبحث عنه العميل داخل النظام؟</p></div></div>
                 @if(auth()->user()->hasPermission('sales-leads.update'))<form method="post" action="{{ route('sales-leads.interests.store',$lead) }}" class="sales-interest-add">@csrf<input class="input" name="name" required placeholder="مثال: المخزون أو ZATCA"><button class="btn btn-primary">+</button></form>@endif
-                <div class="sales-interest-list">@forelse($lead->interests as $interest)<span>{{ $interest->name }}@if(auth()->user()->hasPermission('sales-leads.update'))<form method="post" action="{{ route('sales-leads.interests.destroy',[$lead,$interest]) }}">@csrf @method('delete')<button aria-label="حذف">×</button></form>@endif</span>@empty<small class="muted">لم تسجل اهتمامات بعد.</small>@endforelse</div>
+                <div class="sales-interest-list">@forelse($lead->interests as $interest)<span>{{ $interest->name }}@if(auth()->user()->hasPermission('sales-leads.update'))<form method="post" action="{{ route('sales-leads.interests.destroy',[$lead,$interest]) }}">@csrf @method('delete')<button aria-label="حذف"><x-ui-icon name="x" /></button></form>@endif</span>@empty<small class="muted">لم تسجل اهتمامات بعد.</small>@endforelse</div>
             </section>
 
             <section class="sales-next-card {{ $lead->next_follow_up_at && $lead->next_follow_up_at->isPast()?'is-overdue':'' }}">

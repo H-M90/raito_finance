@@ -10,7 +10,7 @@
         <div><label>خصم يدوي</label><input class="input" type="number" min="0" step=".01" name="items[{{ $index }}][discount_value]" value="{{ $row['discount_value']??0 }}" data-discount></div>
         <div><label>الصيانة %</label><input class="input" type="number" min="0" max="100" step=".01" name="items[{{ $index }}][maintenance_rate]" value="{{ $row['maintenance_rate']??0 }}" data-maintenance></div>
         <div class="pricing-line-result"><label>صافي البند</label><strong class="money" data-line-total>0.00</strong><small data-line-offer></small></div>
-        <button class="remove-row" type="button" data-remove-line aria-label="حذف البند">×</button>
+        <button class="remove-row" type="button" data-remove-line aria-label="حذف البند"><x-ui-icon name="x" /></button>
     </div>
 @endforeach
 </div>
@@ -24,6 +24,6 @@
         <div><label>خصم يدوي</label><input class="input" type="number" min="0" step=".01" name="items[__INDEX__][discount_value]" value="0" data-discount></div>
         <div><label>الصيانة %</label><input class="input" type="number" min="0" max="100" step=".01" name="items[__INDEX__][maintenance_rate]" value="0" data-maintenance></div>
         <div class="pricing-line-result"><label>صافي البند</label><strong class="money" data-line-total>0.00</strong><small data-line-offer></small></div>
-        <button class="remove-row" type="button" data-remove-line>×</button>
+        <button class="remove-row" type="button" data-remove-line><x-ui-icon name="x" /></button>
     </div>
 </template>

@@ -17,9 +17,15 @@
     </div>
 
     <form class="filters" method="get">
-        <div class="form-group search"><label>البحث</label><input class="input" name="q" value="{{ request('q') }}" placeholder="اسم العميل، الكود، الهاتف أو الرقم الضريبي"></div>
-        <div class="form-group"><label>التصنيف</label><select class="select" name="segment"><option value="">الكل</option><option value="standard" @selected(request('segment')==='standard')>عادي</option><option value="startup" @selected(request('segment')==='startup')>شركة ناشئة</option></select></div>
+        <div class="form-group search"><label>البحث</label><input class="input" name="q" value="{{ request('q') }}" placeholder="الاسم، الكود، الهاتف، الرقم الضريبي أو السجل التجاري"></div>
+        <div class="form-group"><label>التصنيف</label><select class="select" name="segment"><option value="">الكل</option>@foreach($segments as $segment)<option value="{{ $segment }}" @selected(request('segment')===$segment)>{{ $segment === 'startup' ? 'شركة ناشئة' : ($segment === 'standard' ? 'عادي' : $segment) }}</option>@endforeach</select></div>
         <div class="form-group"><label>الحالة التشغيلية</label><select class="select" name="status"><option value="">الكل</option><option value="active" @selected(request('status')==='active')>نشط</option><option value="inactive" @selected(request('status')==='inactive')>غير نشط</option></select></div>
+        <div class="form-group"><label>المدينة</label><select class="select" name="city"><option value="">كل المدن</option>@foreach($cities as $city)<option value="{{ $city }}" @selected(request('city')===$city)>{{ $city }}</option>@endforeach</select></div>
+        <div class="form-group"><label>مسؤول المبيعات</label><select class="select" name="sales_owner_id"><option value="">الكل</option>@foreach($salesOwners as $owner)<option value="{{ $owner->id }}" @selected(request('sales_owner_id')==(string)$owner->id)>{{ $owner->name }}</option>@endforeach</select></div>
+        <div class="form-group"><label>العقود</label><select class="select" name="contracts"><option value="">الكل</option><option value="yes" @selected(request('contracts')==='yes')>لديه عقود</option><option value="no" @selected(request('contracts')==='no')>بلا عقود</option></select></div>
+        @if(auth()->user()->hasPermission('customer-success.view'))
+            <div class="form-group"><label>حالة المتابعة</label><select class="select" name="success_status"><option value="">الكل</option>@foreach($successStatuses as $status)<option value="{{ $status->code }}" @selected(request('success_status')===$status->code)>{{ $status->name }}</option>@endforeach</select></div>
+        @endif
         <button class="btn btn-secondary">بحث</button><a class="btn btn-light" href="{{ route('customers.index') }}">مسح</a>
     </form>
 
@@ -60,32 +66,16 @@
                         @endif
                     </td>
                 @endif
-                <td><span class="badge {{ $customer->segment==='startup'?'badge-warning':'badge-info' }}">{{ $customer->segment==='startup'?'شركة ناشئة':'عادي' }}</span></td>
+                <td><span class="badge {{ $customer->segment==='startup'?'badge-warning':'badge-info' }}">{{ $customer->segment==='startup'?'شركة ناشئة':($customer->segment==='standard'?'عادي':$customer->segment) }}</span></td>
                 <td><span class="badge {{ $customer->status==='active'?'badge-success':'badge-dark' }}">{{ $customer->status==='active'?'نشط':'غير نشط' }}</span></td>
                 <td>
                     <div class="customer-row-actions">
                         <a class="icon-action" href="{{ route('customers.show',$customer) }}" title="فتح ملف العميل" aria-label="فتح ملف العميل">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0"/></svg>
+                            <x-ui-icon name="user-round" />
                         </a>
                         @if(auth()->user()->hasPermission('customer-success.update') && $profile)
-                            <details class="quick-reassess">
-                                <summary class="icon-action" title="إعادة تقييم العميل" aria-label="إعادة تقييم العميل">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.7M20 4v7h-7"/></svg>
-                                </summary>
-                                <form method="post" action="{{ route('customer-success.transition',$customer) }}" class="quick-reassess-popover">
-                                    @csrf
-                                    <strong>إعادة تقييم العميل</strong>
-                                    <label>حالة العميل</label>
-                                    <select class="select" name="status_code" required>
-                                        @foreach($successStatuses as $status)
-                                            <option value="{{ $status->code }}" @selected($profile?->lifecycleStatus?->code===$status->code)>{{ $status->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <label>سبب التغيير</label>
-                                    <input class="input" name="reason" maxlength="500" placeholder="اختياري">
-                                    <button class="btn btn-sm btn-primary" type="submit">حفظ التقييم</button>
-                                </form>
-                            </details>
+                            <button class="icon-action" type="button" data-reassess-open="reassess-{{ $customer->id }}" title="إعادة تقييم العميل" aria-label="إعادة تقييم العميل"><x-ui-icon name="refresh-cw" /></button>
+                            @include('customers._reassess_dialog', ['dialogId' => 'reassess-'.$customer->id, 'statuses' => $successStatuses])
                         @endif
                     </div>
                 </td>

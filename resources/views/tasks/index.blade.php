@@ -22,16 +22,16 @@
 
     <section class="task-focus-grid">
         <a class="task-focus-card {{ $view==='today'?'active':'' }}" href="{{ route('tasks.index',array_merge($qs,['view'=>'today'])) }}">
-            <span class="task-focus-icon is-today"></span><span><small>مهام اليوم</small><strong>{{ number_format($metrics['today']) }}</strong><em>مهمة مفتوحة</em></span>
+            <span class="task-focus-icon is-today"><x-ui-icon name="calendar-clock" /></span><span><small>مهام اليوم</small><strong>{{ number_format($metrics['today']) }}</strong><em>مهمة مفتوحة</em></span>
         </a>
         <a class="task-focus-card {{ $view==='overdue'?'active':'' }}" href="{{ route('tasks.index',array_merge($qs,['view'=>'overdue'])) }}">
-            <span class="task-focus-icon is-overdue"></span><span><small>متأخرة</small><strong>{{ number_format($metrics['overdue']) }}</strong><em>تحتاج متابعة</em></span>
+            <span class="task-focus-icon is-overdue"><x-ui-icon name="triangle-alert" /></span><span><small>متأخرة</small><strong>{{ number_format($metrics['overdue']) }}</strong><em>تحتاج متابعة</em></span>
         </a>
         <a class="task-focus-card" href="{{ route('tasks.index',array_merge($qs,['view'=>'today','type'=>'meeting'])) }}">
-            <span class="task-focus-icon is-meeting"></span><span><small>اجتماعات اليوم</small><strong>{{ number_format($metrics['meetings']) }}</strong><em>اجتماع مجدول</em></span>
+            <span class="task-focus-icon is-meeting"><x-ui-icon name="calendar-days" /></span><span><small>اجتماعات اليوم</small><strong>{{ number_format($metrics['meetings']) }}</strong><em>اجتماع مجدول</em></span>
         </a>
         <a class="task-focus-card {{ $view==='done'?'active':'' }}" href="{{ route('tasks.index',array_merge($qs,['view'=>'done'])) }}">
-            <span class="task-focus-icon is-done"></span><span><small>مكتملة اليوم</small><strong>{{ number_format($metrics['done_today']) }}</strong><em>تم إنجازها</em></span>
+            <span class="task-focus-icon is-done"><x-ui-icon name="circle-check" /></span><span><small>مكتملة اليوم</small><strong>{{ number_format($metrics['done_today']) }}</strong><em>تم إنجازها</em></span>
         </a>
     </section>
 
@@ -73,7 +73,7 @@
                         <td class="task-check-cell">
                             @if($isOpen && auth()->user()->hasPermission('tasks.complete'))
                                 <form method="post" action="{{ route('tasks.complete',[$task->source,$task->task_id]) }}">@csrf<button class="task-check-btn" title="إتمام المهمة" aria-label="إتمام المهمة"></button></form>
-                            @elseif($task->status==='completed')<span class="task-check-done">✓</span>@else<span class="task-check-muted"></span>@endif
+                            @elseif($task->status==='completed')<span class="task-check-done"><x-ui-icon name="check" /></span>@else<span class="task-check-muted"></span>@endif
                         </td>
                         <td><span class="task-type-pill t-{{ $task->normalized_type }}">{{ $typeLabel }}</span></td>
                         <td><div class="task-title-cell"><strong>{{ $task->title }}</strong><small>{{ $task->description ?: ($task->protected_task?'مهمة مرتبطة بمتابعة آلية أو خطة عمل':'') }}</small></div></td>
@@ -107,7 +107,7 @@
 @if(auth()->user()->hasPermission('tasks.create'))
 <div class="task-modal" data-task-modal aria-hidden="true">
     <div class="task-modal-card" role="dialog" aria-modal="true" aria-labelledby="task-create-title">
-        <div class="task-modal-head"><div><span>مهمة جديدة</span><h3 id="task-create-title">إضافة مهمة متابعة</h3></div><button type="button" class="icon-button" data-task-modal-close>×</button></div>
+        <div class="task-modal-head"><div><span>مهمة جديدة</span><h3 id="task-create-title">إضافة مهمة متابعة</h3></div><button type="button" class="icon-button" data-task-modal-close><x-ui-icon name="x" /></button></div>
         <form method="post" action="{{ route('tasks.store') }}" data-task-create-form>@csrf
             <div class="task-form-grid">
                 <div class="task-form-field span-2"><label>ترتبط بـ</label><div class="task-target-tabs"><button type="button" class="active" data-target-type="lead">عميل محتمل</button><button type="button" data-target-type="customer">عميل</button><button type="button" data-target-type="internal">مهمة داخلية</button></div><input type="hidden" name="target_type" value="lead" data-target-type-input></div>
@@ -130,7 +130,7 @@
 
 <div class="task-detail-backdrop" data-task-detail-backdrop></div>
 <aside class="task-detail-drawer" data-task-detail-drawer aria-hidden="true">
-    <div class="task-detail-head"><button type="button" class="icon-button" data-task-detail-close>×</button><div><span>تفاصيل المهمة</span><h3 data-detail-heading>—</h3></div></div>
+    <div class="task-detail-head"><button type="button" class="icon-button" data-task-detail-close><x-ui-icon name="x" /></button><div><span>تفاصيل المهمة</span><h3 data-detail-heading>—</h3></div></div>
     <div class="task-detail-body">
         <div class="task-detail-target"><span>مرتبطة بـ</span><a href="#" data-detail-target>—</a></div>
         <div class="task-protected-note" data-protected-note hidden>هذه المهمة ناتجة من متابعة آلية أو خطة عمل؛ يمكنك تعديل الموعد والأولوية والمسؤول بدون تغيير طبيعة المهمة.</div>
