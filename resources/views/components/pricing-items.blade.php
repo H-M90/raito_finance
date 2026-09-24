@@ -1,0 +1,29 @@
+@props(['products'=>collect(), 'rows'=>[]])
+<div class="pricing-items" data-line-items data-next-index="{{ count($rows) }}">
+@foreach($rows as $index=>$row)
+    <div class="pricing-line-row" data-line-row>
+        <div class="pricing-product"><label>المنتج أو الموديول</label><div class="reference-picker-control"><select class="select" name="items[{{ $index }}][product_id]" data-product-select data-remote-url="{{ route('lookup.products') }}" data-smart-select="1" required><option value="">اختر البند</option>@foreach($products as $product)<option value="{{ $product->id }}" data-type="{{ $product->type }}" data-code="{{ $product->code }}" data-required-product-id="{{ $product->required_product_id }}" data-required-product-name="{{ $product->requiredProduct?->name }}" data-price="{{ $product->default_sale_price }}" data-maintenance="{{ $product->default_maintenance_rate }}" data-user-pricing="{{ $product->supports_user_pricing?1:0 }}" data-included-users="{{ $product->included_users_one_time }}" data-user-one-time="{{ $product->extra_user_price_one_time }}" data-user-monthly="{{ $product->user_price_monthly }}" data-user-annual="{{ $product->user_price_annual }}" @selected(($row['product_id']??'')==$product->id)>{{ $product->name }}</option>@endforeach</select>@if(auth()->user()->hasPermission('products.create'))<a class="btn btn-sm btn-outline reference-picker-add" href="{{ route('products.create') }}" target="_blank" rel="noopener">+ جديد</a>@endif</div><small class="help" data-product-dependency-message></small></div>
+        <div data-quantity-field><label>الكمية</label><input class="input" type="number" min="1" step="1" name="items[{{ $index }}][quantity]" value="{{ $row['quantity']??1 }}" data-qty></div>
+        <div><label>سعر البند</label><input class="input" type="number" min="0" step=".01" name="items[{{ $index }}][unit_price]" value="{{ $row['unit_price']??0 }}" data-price></div>
+        <div data-user-field><label data-user-count-label>المستخدمون الإضافيون المدفوعون</label><input class="input" type="number" min="0" step="1" name="items[{{ $index }}][requested_users]" value="{{ $row['requested_users']??0 }}" data-requested-users><small data-user-summary>—</small></div>
+        <div data-user-field><label>سعر المستخدم</label><input class="input" type="number" min="0" step=".01" name="items[{{ $index }}][user_unit_price]" value="{{ $row['user_unit_price']??'' }}" data-user-price></div>
+        <div><label>خصم يدوي</label><input class="input" type="number" min="0" step=".01" name="items[{{ $index }}][discount_value]" value="{{ $row['discount_value']??0 }}" data-discount></div>
+        <div><label>الصيانة %</label><input class="input" type="number" min="0" max="100" step=".01" name="items[{{ $index }}][maintenance_rate]" value="{{ $row['maintenance_rate']??0 }}" data-maintenance></div>
+        <div class="pricing-line-result"><label>صافي البند</label><strong class="money" data-line-total>0.00</strong><small data-line-offer></small></div>
+        <button class="remove-row" type="button" data-remove-line aria-label="حذف البند">×</button>
+    </div>
+@endforeach
+</div>
+<template data-line-template>
+    <div class="pricing-line-row" data-line-row>
+        <div class="pricing-product"><label>المنتج أو الموديول</label><div class="reference-picker-control"><select class="select" name="items[__INDEX__][product_id]" data-remote-url="{{ route('lookup.products') }}" data-smart-select="1" data-product-select required><option value="">اختر البند</option>@foreach($products as $product)<option value="{{ $product->id }}" data-type="{{ $product->type }}" data-code="{{ $product->code }}" data-required-product-id="{{ $product->required_product_id }}" data-required-product-name="{{ $product->requiredProduct?->name }}" data-price="{{ $product->default_sale_price }}" data-maintenance="{{ $product->default_maintenance_rate }}" data-user-pricing="{{ $product->supports_user_pricing?1:0 }}" data-included-users="{{ $product->included_users_one_time }}" data-user-one-time="{{ $product->extra_user_price_one_time }}" data-user-monthly="{{ $product->user_price_monthly }}" data-user-annual="{{ $product->user_price_annual }}">{{ $product->name }}</option>@endforeach</select>@if(auth()->user()->hasPermission('products.create'))<a class="btn btn-sm btn-outline reference-picker-add" href="{{ route('products.create') }}" target="_blank" rel="noopener">+ جديد</a>@endif</div><small class="help" data-product-dependency-message></small></div>
+        <div data-quantity-field><label>الكمية</label><input class="input" type="number" min="1" step="1" name="items[__INDEX__][quantity]" value="1" data-qty></div>
+        <div><label>سعر البند</label><input class="input" type="number" min="0" step=".01" name="items[__INDEX__][unit_price]" value="0" data-price></div>
+        <div data-user-field><label data-user-count-label>المستخدمون الإضافيون المدفوعون</label><input class="input" type="number" min="0" step="1" name="items[__INDEX__][requested_users]" value="0" data-requested-users><small data-user-summary>—</small></div>
+        <div data-user-field><label>سعر المستخدم</label><input class="input" type="number" min="0" step=".01" name="items[__INDEX__][user_unit_price]" value="0" data-user-price></div>
+        <div><label>خصم يدوي</label><input class="input" type="number" min="0" step=".01" name="items[__INDEX__][discount_value]" value="0" data-discount></div>
+        <div><label>الصيانة %</label><input class="input" type="number" min="0" max="100" step=".01" name="items[__INDEX__][maintenance_rate]" value="0" data-maintenance></div>
+        <div class="pricing-line-result"><label>صافي البند</label><strong class="money" data-line-total>0.00</strong><small data-line-offer></small></div>
+        <button class="remove-row" type="button" data-remove-line>×</button>
+    </div>
+</template>

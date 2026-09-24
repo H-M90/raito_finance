@@ -1,0 +1,15 @@
+{
+  "name": "raito-finance",
+  "version": "0.6.14",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check resources/js/app.js",
+    "build": "node scripts/build-assets.mjs && node --check public/assets/app.js"
+  },
+  "dependencies": {
+    "jquery": "3.7.1",
+    "select2": "4.0.13",
+    "select2-bootstrap-5-theme": "1.3.0"
+  }
+}

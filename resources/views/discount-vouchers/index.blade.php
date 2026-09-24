@@ -1,0 +1,10 @@
+@extends('layouts.app')
+@section('title','سندات الخصم')
+@section('page-title','سندات الخصم')
+@section('page-subtitle','تخفيض الاستحقاقات مع أثر واضح في كشف الحساب')
+@section('content')
+<div class="toolbar"><form class="search-form"><input class="input" name="q" value="{{ request('q') }}" placeholder="رقم السند أو السبب"><button class="btn btn-light">بحث</button></form>@if(auth()->user()->hasPermission('discount-vouchers.create'))<a class="btn btn-primary" href="{{ route('discount-vouchers.create') }}">+ سند خصم</a>@endif</div>
+<div class="card table-wrap"><table><thead><tr><th>الرقم</th><th>العميل</th><th>التاريخ</th><th>العملة</th><th>القيمة</th><th>السبب</th><th>الحالة</th><th></th></tr></thead><tbody>
+@forelse($vouchers as $v)<tr><td>{{ $v->number }}</td><td>{{ $v->customer->name }}</td><td>{{ $v->voucher_date->format('Y-m-d') }}</td><td>{{ $v->currency }}</td><td class="money">{{ number_format((float)$v->amount,2) }}</td><td>{{ $v->reason }}</td><td><span class="badge {{ $v->status==='cancelled'?'badge-danger':'badge-success' }}">{{ $v->status==='cancelled'?'ملغي':'مؤكد' }}</span></td><td class="actions">@if(auth()->user()->hasPermission('discount-vouchers.update')&&$v->status!=='cancelled')<a class="btn btn-sm btn-light" href="{{ route('discount-vouchers.edit',$v) }}">تعديل</a>@endif @if($v->status!=='cancelled'&&auth()->user()->hasPermission('discount-vouchers.cancel'))<form method="post" action="{{ route('discount-vouchers.cancel',$v) }}" class="inline-form" data-confirm="إلغاء سند الخصم وعكس أثره؟">@csrf<input type="hidden" name="cancellation_reason" value="إلغاء من قائمة سندات الخصم"><button class="btn btn-sm btn-danger">إلغاء</button></form>@elseif(auth()->user()->hasPermission('discount-vouchers.reopen'))<form method="post" action="{{ route('discount-vouchers.reopen',$v) }}" class="inline-form">@csrf<button class="btn btn-sm btn-outline">إعادة فتح</button></form>@endif</td></tr>@empty<tr><td colspan="8" class="empty-state">لا توجد سندات خصم.</td></tr>@endforelse
+</tbody></table></div>{{ $vouchers->links() }}
+@endsection

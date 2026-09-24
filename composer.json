@@ -1,0 +1,134 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "raitotec/finance-management",
+    "type": "project",
+    "description": "Raito financial operations system for quotations, contracts, receivables, collections, maintenance, bank reconciliation, costs and profitability.",
+    "keywords": [
+        "laravel",
+        "finance",
+        "contracts",
+        "erp",
+        "bank-reconciliation",
+        "raitotec"
+    ],
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "ext-ctype": "*",
+        "ext-curl": "*",
+        "ext-dom": "*",
+        "ext-fileinfo": "*",
+        "ext-filter": "*",
+        "ext-gd": "*",
+        "ext-iconv": "*",
+        "ext-libxml": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "ext-simplexml": "*",
+        "ext-tokenizer": "*",
+        "ext-xml": "*",
+        "ext-xmlreader": "*",
+        "ext-xmlwriter": "*",
+        "ext-zip": "*",
+        "ext-zlib": "*",
+        "dompdf/dompdf": "^3.1",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
+        "phpoffice/phpspreadsheet": "^5.9",
+        "maennchen/zipstream-php": "3.1.2"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.24",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5.50"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "setup": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate --ansi",
+            "@php artisan migrate --force --ansi",
+            "@php artisan db:seed --force --ansi",
+            "npm ci --ignore-scripts --no-audit --no-fund",
+            "npm run build"
+        ],
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php artisan migrate --graceful --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan serve"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ],
+        "quality": [
+            "@php artisan config:clear --ansi",
+            "@php scripts/verify-requested-features.php",
+            "@php scripts/verify-php82-compatibility.php",
+            "@php vendor/bin/pint --test",
+            "@php artisan test",
+            "npm run check",
+            "npm run build"
+        ],
+        "production:check": [
+            "@php scripts/verify-production-readiness.php"
+        ],
+        "requirements:audit": [
+            "@php scripts/verify-requested-features.php"
+        ],
+        "php82:check": [
+            "@php scripts/verify-php82-compatibility.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "platform-check": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.2.0"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,40 @@
+@extends('layouts.app')
+@section('title',$quotation->exists?'تعديل عرض مبيعات':'عرض مبيعات جديد')
+@section('page-title',$quotation->exists?'تعديل عرض المبيعات '.$quotation->number:'إنشاء عرض مبيعات')
+@section('page-subtitle','تسعير الموديولات والمستخدمين وتطبيق العروض تلقائيًا')
+@section('content')
+@php
+$rows=old('items',$quotation->exists?$quotation->items->map(fn($i)=>$i->only(['product_id','quantity','requested_users','user_unit_price','unit_price','discount_value','maintenance_rate','notes']))->all():[['product_id'=>'','quantity'=>1,'requested_users'=>0,'user_unit_price'=>'','unit_price'=>0,'discount_value'=>0,'maintenance_rate'=>0]]);
+$selectedOffers=$quotation->exists?$quotation->pricingOffers->pluck('id')->all():[];
+$selectedCustomer=old('customer_id',$quotation->customer_id);
+$hasIntermediary=(string)old('has_intermediary',filled($quotation->intermediary_id)?'1':'0');
+@endphp
+<form method="post" enctype="multipart/form-data" action="{{ $quotation->exists?route('quotations.update',$quotation):route('quotations.store') }}" data-financial-form data-intermediary-form data-quotation-form data-tax-rate="{{ config('finance.tax_rate') }}">@csrf @if($quotation->exists)@method('put')@endif
+<x-customer-picker-card :customers="$customers" :selected="$selectedCustomer" source-type="quotation" />
+<div class="form-section"><div class="form-section-title"><h3>بيانات العرض</h3><span class="badge badge-info">ضريبة {{ config('finance.tax_rate') }}%</span></div><div class="form-grid">
+<div class="form-group col-2"><label>نوع النشاط</label><select class="select" name="activity_type" data-quotation-activity>@foreach($activities as $value=>$label)<option value="{{ $value }}" @selected(old('activity_type',$quotation->activity_type?:'erp')===$value)>{{ $label }}</option>@endforeach</select></div>
+<div class="form-group col-2" data-quotation-station-count @if(old('activity_type',$quotation->activity_type?:'erp')!=='stations') hidden @endif><label>عدد المحطات المتوقع</label><input class="input" type="number" min="0" step="1" name="station_count" value="{{ old('station_count',$quotation->station_count?:0) }}"><div class="help">للتخطيط فقط؛ PTS والحساسات تُسعّر من البنود.</div></div>
+<div class="form-group col-2"><label>تاريخ العرض</label><input class="input" type="date" name="quotation_date" value="{{ old('quotation_date',optional($quotation->quotation_date)->format('Y-m-d')?:today()->format('Y-m-d')) }}" required></div>
+<div class="form-group col-2"><label>صالح حتى</label><input class="input" type="date" name="valid_until" value="{{ old('valid_until',optional($quotation->valid_until)->format('Y-m-d')?:today()->addDays(config('finance.quotation_valid_days'))->format('Y-m-d')) }}"></div>
+<div class="form-group col-3"><label>العملة</label><select class="select" name="currency">@foreach($currencies as $value=>$label)<option value="{{ $value }}" @selected(old('currency',$quotation->currency?:config('finance.default_currency'))===$value)>{{ $label }}</option>@endforeach</select></div>
+<div class="form-group col-3"><label>دورية الفوترة</label><select class="select" name="billing_cycle">@foreach($cycles as $value=>$label)<option value="{{ $value }}" @selected(old('billing_cycle',$quotation->billing_cycle?:'one_time')===$value)>{{ $label }}</option>@endforeach</select></div>
+
+<div class="form-group col-3"><label>مصدر العميل</label><select class="select" name="lead_source"><option value="">غير محدد</option>@foreach(['existing_customer'=>'عميل سابق','referral'=>'توصية','direct'=>'اتصال مباشر','website'=>'الموقع','campaign'=>'حملة إعلانية','intermediary'=>'وسيط','other'=>'أخرى'] as $v=>$l)<option value="{{ $v }}" @selected(old('lead_source',$quotation->lead_source)===$v)>{{ $l }}</option>@endforeach</select></div>
+<x-reference-picker label="مسؤول المبيعات" name="sales_owner_id" wrapper-class="col-3"><option value="">غير محدد</option>@foreach($salesOwners as $owner)<option value="{{ $owner->id }}" @selected(old('sales_owner_id',$quotation->sales_owner_id)==$owner->id)>{{ $owner->name }}</option>@endforeach</x-reference-picker>
+<div class="form-group col-2"><label>هل يوجد وسيط؟</label><select class="select" name="has_intermediary" data-has-intermediary><option value="0" @selected($hasIntermediary==='0')>لا</option><option value="1" @selected($hasIntermediary==='1')>نعم</option></select></div>
+<div class="col-12" data-intermediary-panel @if($hasIntermediary!=='1') hidden @endif>
+    <div class="form-grid">
+        <x-reference-picker label="الوسيط" name="intermediary_id" wrapper-class="col-4" :create-url="route('intermediaries.index').'#new-intermediary'" create-label="وسيط جديد" :can-create="auth()->user()->hasPermission('intermediaries.create')"><option value="">اختر الوسيط</option>@foreach($intermediaries as $i)<option value="{{ $i->id }}" @selected(old('intermediary_id',$quotation->intermediary_id)==$i->id)>{{ $i->name }}</option>@endforeach</x-reference-picker>
+        <div class="form-group col-2"><label>نوع العمولة</label><select class="select" name="commission_type" data-commission-type><option value="percentage" @selected(old('commission_type',$quotation->commission_type)==='percentage')>نسبة %</option><option value="fixed" @selected(old('commission_type',$quotation->commission_type)==='fixed')>مبلغ ثابت</option></select></div>
+        <div class="form-group col-2"><label data-commission-value-label>النسبة / القيمة</label><input class="input" type="number" min="0" step=".01" name="commission_value" data-commission-value value="{{ old('commission_value',$quotation->commission_value) }}"></div>
+        <div class="form-group col-4"><label>قيمة العمولة</label><div class="commission-value-card compact"><strong data-commission-total>{{ number_format((float)$quotation->commission_total,2) }}</strong><span data-commission-currency>{{ old('currency',$quotation->currency?:config('finance.default_currency')) }}</span><small>من صافي العرض بعد الخصم وقبل الضريبة</small></div></div>
+    </div>
+</div>
+<div class="form-group col-2"><label>الحالة</label><div class="readonly-value"><span class="badge badge-info">مسودة</span></div><div class="help">تتغير الحالة من صفحة العرض حسب الصلاحية.</div></div>
+</div></div>
+<div class="form-section"><div class="form-section-title"><div><h3>عروض وخصومات التسعير</h3><div class="help">يمكن الجمع بين عروض المستخدمين والخصومات القابلة للتجميع.</div></div><a class="btn btn-sm btn-light" href="{{ route('pricing-offers.index') }}" target="_blank">إدارة العروض</a></div><x-pricing-offers :offers="$pricingOffers" :selected="$selectedOffers" /></div>
+<div class="form-section"><div class="form-section-title"><div><h3>بنود العرض</h3><div class="help">أضف PTS والحساسات كبنود عادية بالكميات والأسعار. الموديول لا يحتوي على كمية؛ تحدد سعره وعدد المستخدمين الإضافيين فقط. أما PTS والحساسات فتُسجل بالكميات.</div></div><button class="btn btn-sm btn-outline" type="button" data-add-line>+ إضافة بند</button></div><x-pricing-items :products="$products" :rows="$rows" /><x-financial-totals /></div>
+<div class="form-section"><div class="form-grid"><div class="form-group col-6"><label>شروط الدفع</label><textarea class="textarea" name="payment_terms">{{ old('payment_terms',$quotation->payment_terms) }}</textarea></div><div class="form-group col-3"><label>مدة التنفيذ</label><input class="input" name="expected_execution_period" value="{{ old('expected_execution_period',$quotation->expected_execution_period) }}"></div><div class="form-group col-3"><label>ملاحظات</label><textarea class="textarea" name="notes">{{ old('notes',$quotation->notes) }}</textarea></div><div class="form-group col-6"><label>ملف عرض المبيعات</label><input class="input" type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.webp"><div class="help">PDF أو صورة، بحد أقصى 10MB.</div></div></div></div>
+<div class="form-actions"><button class="btn btn-primary">{{ $quotation->exists?'حفظ التعديلات':'حفظ عرض المبيعات' }}</button><a class="btn btn-light" href="{{ route('quotations.index') }}">إلغاء</a></div>
+</form>
+@endsection
